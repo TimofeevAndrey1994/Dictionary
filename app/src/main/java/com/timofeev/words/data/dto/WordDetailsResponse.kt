@@ -1,6 +1,3 @@
 package com.timofeev.words.data.dto
 
-
-import com.google.gson.annotations.SerializedName
-
-class WordDetailsResponse : ArrayList<WordDetailsResponseItem>()
+class WordDetailsResponse(override var resultCode: Int) : ArrayList<WordDetailsResponseItem>(), Response
