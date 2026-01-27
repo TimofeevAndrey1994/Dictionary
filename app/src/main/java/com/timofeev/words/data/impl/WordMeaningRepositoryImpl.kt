@@ -3,6 +3,7 @@ package com.timofeev.words.data.impl
 import com.timofeev.words.data.dto.WordDetailsResponse
 import com.timofeev.words.data.dto.WordMeaningRequest
 import com.timofeev.words.data.mappers.WordDetailsMapper
+import com.timofeev.words.data.network.NetworkClient
 import com.timofeev.words.data.network.RetrofitNetworkClient
 import com.timofeev.words.domain.api.WordMeaningRepository
 import com.timofeev.words.domain.model.WordDetails
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.flow
 import java.util.ArrayList
 
 class WordMeaningRepositoryImpl(
-    private val networkClient: RetrofitNetworkClient,
+    private val networkClient: NetworkClient,
     private val wordDetailsMapper: WordDetailsMapper
 ) : WordMeaningRepository {
     override fun getWordMeaning(word: String): Flow<Resource<List<WordDetails>>> = flow {

@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.timofeev.words"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.timofeev.words"

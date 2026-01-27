@@ -17,7 +17,8 @@ class RetrofitNetworkClient(
                 try {
                     val response = dictionaryApi.getWordMeaning(dto.word)
                     return response.apply { resultCode = 200 }
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    println("Ошибка сети $e")
                     return object : Response { override var resultCode: Int = 500 }
                 }
 
