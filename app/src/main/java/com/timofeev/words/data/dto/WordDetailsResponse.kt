@@ -1,3 +1,5 @@
 package com.timofeev.words.data.dto
 
-class WordDetailsResponse(override var resultCode: Int) : ArrayList<WordDetailsResponseItem>(), Response
+class WordDetailsResponse : ArrayList<WordDetailsResponseItem>(), Response {
+    override var resultCode: Int = 0
+}
