@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Words</string>
+    <string name="dictionary_title">Dictionary</string>
 </resources>
