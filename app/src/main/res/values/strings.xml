@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Words</string>
+    <string name="search_label">Word</string>
+    <string name="search_button">Find meaning</string>
+    <string name="search_hint">Enter a word and tap Find meaning</string>
+    <string name="error_unknown">Unknown error</string>
 </resources>
