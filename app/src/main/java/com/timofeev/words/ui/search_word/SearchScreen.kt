@@ -15,13 +15,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.timofeev.words.presentation.SeachWordViewModel
+import com.timofeev.words.presentation.SeachWordViewModelFactory
 
 @Composable
 fun SearchScreenRoute(modifier: Modifier = Modifier) {
-    val seachWordViewModel: SeachWordViewModel = viewModel()
+    val context = LocalContext.current.applicationContext
+    val seachWordViewModel: SeachWordViewModel = viewModel(
+        factory = SeachWordViewModelFactory(
+            context
+        )
+    )
     val searchText = seachWordViewModel.searchText.collectAsState()
 
     SearchScreen(
