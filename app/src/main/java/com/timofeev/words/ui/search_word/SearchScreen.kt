@@ -18,8 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.timofeev.words.presentation.SeachWordViewModel
-import com.timofeev.words.presentation.SeachWordViewModelFactory
+import com.timofeev.words.presentation.search.SeachWordViewModel
+import com.timofeev.words.presentation.search.SeachWordViewModelFactory
+import com.timofeev.words.presentation.search.SearchResultState
+import com.timofeev.words.presentation.search.SearchUiState
 
 @Composable
 fun SearchScreenRoute(modifier: Modifier = Modifier) {
@@ -29,13 +31,14 @@ fun SearchScreenRoute(modifier: Modifier = Modifier) {
             context
         )
     )
-    val searchText = seachWordViewModel.searchText.collectAsState()
+    val uiState = seachWordViewModel.uiState.collectAsState()
 
     SearchScreen(
         modifier = modifier,
-        searchText.value,
+        uiState.value.searchText,
         onValueChange = seachWordViewModel::onSearchTextChange,
-        onSearchTextClear = seachWordViewModel::onSearchTextClear
+        onSearchTextClear = seachWordViewModel::onSearchTextClear,
+        searchUiState = uiState.value.resultState
     )
 }
 
@@ -44,7 +47,8 @@ fun SearchScreen(
     modifier: Modifier = Modifier,
     textFieldValue: String,
     onValueChange: (String) -> Unit,
-    onSearchTextClear: () -> Unit
+    onSearchTextClear: () -> Unit,
+    searchUiState: SearchResultState
 ) {
     Column(
         modifier = modifier
@@ -72,5 +76,40 @@ fun SearchScreen(
             value = textFieldValue,
             onValueChange = onValueChange
         )
+       when(searchUiState){
+           is SearchResultState.Empty -> {
+               Empty()
+           }
+           is SearchResultState.Error -> {
+               Error()
+           }
+           SearchResultState.Init -> {}
+           SearchResultState.Loading -> {
+               Loading()
+           }
+           is SearchResultState.Success -> {
+               WordDetails()
+           }
+       }
     }
+}
+
+@Composable
+fun Empty(){
+  TODO()
+}
+
+@Composable
+fun Error(){
+    TODO()
+}
+
+@Composable
+fun Loading(){
+    TODO()
+}
+
+@Composable
+fun WordDetails(){
+    TODO()
 }
