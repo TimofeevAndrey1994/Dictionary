@@ -1,4 +1,4 @@
-package com.timofeev.words.presentation
+package com.timofeev.words.presentation.search
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -16,33 +16,53 @@ import kotlinx.coroutines.launch
 class SeachWordViewModel(private val context: Context) : ViewModel() {
     private var job: Job? = null
 
-    private val _searchText = MutableStateFlow("")
-    val searchText = _searchText.asStateFlow()
+    private val _uiState = MutableStateFlow(SearchUiState())
+    val uiState = _uiState.asStateFlow()
+
     private var previousSearchedText = ""
 
     fun onSearchTextChange(value: String) {
-        _searchText.value = value
+        _uiState.value = _uiState.value.copy(searchText = value)
         searchWithDebaunce()
     }
 
     fun onSearchTextClear(){
-        _searchText.value = ""
+        _uiState.value = _uiState.value.copy(searchText = "")
+        job?.cancel()
+        _uiState.value = _uiState.value.copy(resultState = SearchResultState.Init)
     }
 
     private fun searchWithDebaunce() {
-        val searchText = _searchText.value.trim()
+        val searchText = _uiState.value.searchText.trim()
+        if (searchText.isEmpty()) {
+            onSearchTextClear()
+            return
+        }
         if (previousSearchedText == searchText) return
 
         job?.cancel()
         job = viewModelScope.launch {
             delay(2000L)
+            _uiState.value = _uiState.value.copy(resultState = SearchResultState.Loading)
             Creator.provideGetWordMeaningUseCase(context).getWordMeaning(searchText)
                 .collect { res ->
                     when(res){
                         is Resource.Error<*> -> {
-                            println(res.message)
+                            _uiState.value =
+                                _uiState.value.copy(
+                                    resultState = SearchResultState.Error(
+                                        res.message ?: ""
+                                    )
+                                )
                         }
                         is Resource.Success<*> -> {
+                            if (res.data.isNullOrEmpty()) {
+                                _uiState.value =
+                                    _uiState.value.copy(resultState = SearchResultState.Empty("Список пуст!"))  //--- Потом вынесу в ресурсы
+                            } else {
+                                _uiState.value =
+                                    _uiState.value.copy(resultState = SearchResultState.Success(res.data))
+                            }
                             println(res.data)
                         }
                     }
