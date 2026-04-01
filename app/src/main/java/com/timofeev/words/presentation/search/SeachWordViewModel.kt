@@ -36,8 +36,8 @@ class SeachWordViewModel(private val context: Context) : ViewModel() {
 
         job?.cancel()
         job = viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(resultState = SearchResultState.Loading)
             delay(2000L)
+            _uiState.value = _uiState.value.copy(resultState = SearchResultState.Loading)
             Creator.provideGetWordMeaningUseCase(context).getWordMeaning(searchText)
                 .collect { res ->
                     when(res){

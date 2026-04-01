@@ -96,20 +96,20 @@ fun SearchScreen(
 
 @Composable
 fun Empty(){
-  TODO()
+  Text("Empty")
 }
 
 @Composable
 fun Error(){
-    TODO()
+    Text("Error")
 }
 
 @Composable
 fun Loading(){
-    TODO()
+    Text("Loading")
 }
 
 @Composable
 fun WordDetails(){
-    TODO()
+    Text("WordDetails")
 }
