@@ -28,10 +28,16 @@ class SeachWordViewModel(private val context: Context) : ViewModel() {
 
     fun onSearchTextClear(){
         _uiState.value = _uiState.value.copy(searchText = "")
+        job?.cancel()
+        _uiState.value = _uiState.value.copy(resultState = SearchResultState.Init)
     }
 
     private fun searchWithDebaunce() {
-        val searchText = _uiState.value.searchText
+        val searchText = _uiState.value.searchText.trim()
+        if (searchText.isEmpty()) {
+            onSearchTextClear()
+            return
+        }
         if (previousSearchedText == searchText) return
 
         job?.cancel()
