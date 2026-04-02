@@ -5,6 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.timofeev.words.di.Creator
+import com.timofeev.words.domain.api.AddToSearchHistoryUseCase
+import com.timofeev.words.domain.api.ClearSearchHistoryUseCase
+import com.timofeev.words.domain.api.GetSearchHistoryUseCase
+import com.timofeev.words.domain.api.GetWordMeaningUseCase
 import com.timofeev.words.utils.Resource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -13,16 +17,40 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 //--- Context в будущем будем получать из DI (но пока что так)
-class SeachWordViewModel(private val context: Context) : ViewModel() {
+class SeachWordViewModel(
+    private val getWordMeaningUseCase: GetWordMeaningUseCase,
+    private val addToSearchHistoryUseCase: AddToSearchHistoryUseCase,
+    private val clearSearchHistoryUseCase: ClearSearchHistoryUseCase,
+    private val getSearchHistoryUseCase: GetSearchHistoryUseCase
+) : ViewModel() {
     private var job: Job? = null
-
+    private var isEditTextFocused: Boolean = false
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState = _uiState.asStateFlow()
 
     private var previousSearchedText = ""
 
+    init {
+        viewModelScope.launch {
+            getSearchHistoryUseCase.getSearchHistory()
+                .collect { words ->
+                    _uiState.value = _uiState.value.copy(searchHistoryList = words)
+                    isMustShowHistory()
+                }
+        }
+    }
+
+    private suspend fun addToHistory(value: String) {
+        addToSearchHistoryUseCase.addToSearchHistory(value)
+        getSearchHistoryUseCase.getSearchHistory()
+            .collect { words ->
+                _uiState.value = _uiState.value.copy(searchHistoryList = words)
+            }
+    }
+
     fun onSearchTextChange(value: String) {
-        _uiState.value = _uiState.value.copy(searchText = value)
+        _uiState.value = _uiState.value.copy(searchText = value.replace(",",""))
+        isMustShowHistory()
         searchWithDebaunce()
     }
 
@@ -30,6 +58,21 @@ class SeachWordViewModel(private val context: Context) : ViewModel() {
         _uiState.value = _uiState.value.copy(searchText = "")
         job?.cancel()
         _uiState.value = _uiState.value.copy(resultState = SearchResultState.Init)
+        isMustShowHistory()
+    }
+
+    fun onEditTextFocusChanged(isFocused: Boolean) {
+        isEditTextFocused = isFocused
+        isMustShowHistory()
+    }
+
+    private fun isMustShowHistory() {
+        val value = _uiState.value
+        if (value.searchText.trim().isEmpty() && isEditTextFocused && value.searchHistoryList.isNotEmpty()) {
+            _uiState.value = value.copy(isHistoryVisible = true)
+        } else {
+            _uiState.value = value.copy(isHistoryVisible = false)
+        }
     }
 
     private fun searchWithDebaunce() {
@@ -44,7 +87,7 @@ class SeachWordViewModel(private val context: Context) : ViewModel() {
         job = viewModelScope.launch {
             delay(2000L)
             _uiState.value = _uiState.value.copy(resultState = SearchResultState.Loading)
-            Creator.provideGetWordMeaningUseCase(context).getWordMeaning(searchText)
+            getWordMeaningUseCase.getWordMeaning(searchText)
                 .collect { res ->
                     when(res){
                         is Resource.Error<*> -> {
@@ -60,6 +103,7 @@ class SeachWordViewModel(private val context: Context) : ViewModel() {
                                 _uiState.value =
                                     _uiState.value.copy(resultState = SearchResultState.Empty("Список пуст!"))  //--- Потом вынесу в ресурсы
                             } else {
+                                addToHistory(searchText)
                                 _uiState.value =
                                     _uiState.value.copy(resultState = SearchResultState.Success(res.data))
                             }
@@ -79,7 +123,12 @@ class SeachWordViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SeachWordViewModel::class.java)) {
-            return SeachWordViewModel(context) as T
+            return SeachWordViewModel(
+                Creator.provideGetWordMeaningUseCase(context),
+                Creator.provideAddToSearchHistoryUseCase(context),
+                Creator.provideClearSearchHistoryUseCase(context),
+                Creator.provideGetSearchHistoryUseCase(context)
+            ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
