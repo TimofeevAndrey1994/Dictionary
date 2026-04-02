@@ -14,7 +14,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 //--- Context в будущем будем получать из DI (но пока что так)
@@ -36,6 +35,7 @@ class SeachWordViewModel(
             getSearchHistoryUseCase.getSearchHistory()
                 .collect { words ->
                     _uiState.value = _uiState.value.copy(searchHistoryList = words)
+                    isMustShowHistory()
                 }
         }
     }
@@ -49,7 +49,7 @@ class SeachWordViewModel(
     }
 
     fun onSearchTextChange(value: String) {
-        _uiState.value = _uiState.value.copy(searchText = value)
+        _uiState.value = _uiState.value.copy(searchText = value.replace(",",""))
         isMustShowHistory()
         searchWithDebaunce()
     }

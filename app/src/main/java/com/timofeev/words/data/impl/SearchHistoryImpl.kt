@@ -1,10 +1,10 @@
 package com.timofeev.words.data.impl
 
 import android.content.Context
+import androidx.core.content.edit
 import com.timofeev.words.domain.api.SearchHistory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import androidx.core.content.edit
 
 class SearchHistoryImpl(private val context: Context): SearchHistory {
 
@@ -14,7 +14,8 @@ class SearchHistoryImpl(private val context: Context): SearchHistory {
 
     override fun getSearchHistory(): Flow<List<String>> = flow {
         val words = prefs.getString("SEARCH_HISTORY","")
-        val wordsList = if (words.isNullOrEmpty()) emptyList() else words.split(',')
+        val wordsList = if (words.isNullOrEmpty()) emptyList() else words.split(',').reversed()
+
         emit(wordsList)
     }
 
