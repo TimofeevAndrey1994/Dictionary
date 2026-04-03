@@ -3,6 +3,7 @@ package com.timofeev.words.data.impl
 import android.content.Context
 import androidx.core.content.edit
 import com.timofeev.words.domain.api.SearchHistory
+import com.timofeev.words.utils.swap
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -27,10 +28,22 @@ class SearchHistoryImpl(private val context: Context): SearchHistory {
 
     override suspend fun addToSearchHistory(value: String) {
         var words = prefs.getString("SEARCH_HISTORY", "") ?: ""
-        words.split(',').forEach {
-            if (it == value) return
+        var wordsList = words.split(',')
+        val index = wordsList.indexOf(value)
+        if (index > -1) {
+            words = wordsList.toMutableList()
+                .swap(index, wordsList.lastIndex)
+                .joinToString(",")
         }
-        words += (if (words.isEmpty()) value else ",$value")
+        else {
+            words += (if (words.isEmpty()) value else ",$value")
+        }
+        wordsList = words.split(",")
+        if (wordsList.count() > 10) {
+            words = wordsList
+                .drop(1)
+                .joinToString(",")
+        }
         prefs.edit {
             putString("SEARCH_HISTORY", words)
         }

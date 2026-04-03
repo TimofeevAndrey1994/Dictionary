@@ -32,11 +32,7 @@ class SeachWordViewModel(
 
     init {
         viewModelScope.launch {
-            getSearchHistoryUseCase.getSearchHistory()
-                .collect { words ->
-                    _uiState.value = _uiState.value.copy(searchHistoryList = words)
-                    isMustShowHistory()
-                }
+            loadHistory()
         }
     }
 
@@ -52,6 +48,28 @@ class SeachWordViewModel(
         _uiState.value = _uiState.value.copy(searchText = value.replace(",",""))
         isMustShowHistory()
         searchWithDebaunce()
+    }
+
+    fun onHistoryItemClick(value: String) {
+        _uiState.value = _uiState.value.copy(searchText = value)
+        //--- Если нажали на то же слово - оно тоже должно искаться
+        previousSearchedText = ""
+        searchWithDebaunce(force = true)
+        isMustShowHistory()
+    }
+
+    private suspend fun loadHistory(){
+        getSearchHistoryUseCase.getSearchHistory().collect { words ->
+            _uiState.value = _uiState.value.copy(searchHistoryList = words)
+            isMustShowHistory()
+        }
+    }
+
+    fun onClearHistory() {
+        viewModelScope.launch {
+            clearSearchHistoryUseCase.clearSearchHistory()
+            loadHistory()
+        }
     }
 
     fun onSearchTextClear(){
@@ -75,7 +93,7 @@ class SeachWordViewModel(
         }
     }
 
-    private fun searchWithDebaunce() {
+    private fun searchWithDebaunce(force: Boolean = false) {
         val searchText = _uiState.value.searchText.trim()
         if (searchText.isEmpty()) {
             onSearchTextClear()
@@ -85,7 +103,7 @@ class SeachWordViewModel(
 
         job?.cancel()
         job = viewModelScope.launch {
-            delay(2000L)
+            if (!force) delay(2000L)
             _uiState.value = _uiState.value.copy(resultState = SearchResultState.Loading)
             getWordMeaningUseCase.getWordMeaning(searchText)
                 .collect { res ->

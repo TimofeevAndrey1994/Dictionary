@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,7 +50,9 @@ fun SearchScreenRoute(modifier: Modifier = Modifier) {
         searchUiState = uiState.value.resultState,
         showHistory = uiState.value.isHistoryVisible,
         onEditTextChanged = seachWordViewModel::onEditTextFocusChanged,
-        searchHistoryWords = uiState.value.searchHistoryList
+        searchHistoryWords = uiState.value.searchHistoryList,
+        onHistoryItemClick = seachWordViewModel::onHistoryItemClick,
+        onHistoryClear = seachWordViewModel::onClearHistory
     )
 }
 
@@ -62,7 +65,9 @@ fun SearchScreen(
     searchUiState: SearchResultState,
     showHistory: Boolean,
     onEditTextChanged: (Boolean) -> Unit,
-    searchHistoryWords: List<String>
+    searchHistoryWords: List<String>,
+    onHistoryItemClick: (String) -> Unit,
+    onHistoryClear: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -93,7 +98,7 @@ fun SearchScreen(
             onValueChange = onValueChange
         )
 
-        if (showHistory) SearchHistory(searchHistoryWords)
+        if (showHistory) SearchHistory(searchHistoryWords, onHistoryItemClick, onHistoryClear)
 
        when(searchUiState){
            is SearchResultState.Empty -> {
@@ -115,10 +120,21 @@ fun SearchScreen(
 
 
 @Composable
-fun SearchHistory(items: List<String>) {
+fun SearchHistory(
+    items: List<String>,
+    onHistoryItemClick: (String) -> Unit,
+    onHistoryClear: () -> Unit
+) {
     Spacer(Modifier.height(12.dp))
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Недавние запросы")
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Text("Недавние запросы", modifier = Modifier.align(Alignment.Center))
+            Text(
+                "Очистить",
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.align(Alignment.CenterEnd).clickable(onClick = { onHistoryClear() }),
+            )
+        }
         Spacer(Modifier.height(8.dp))
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -128,7 +144,7 @@ fun SearchHistory(items: List<String>) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable{},
+                        .clickable { onHistoryItemClick(it) },
                 ) {
                     Box(
                         modifier = Modifier
