@@ -36,10 +36,6 @@ class SeachWordViewModel(
 
     private suspend fun addToHistory(value: String) {
         addToSearchHistoryUseCase.addToSearchHistory(value)
-        getSearchHistoryUseCase.getSearchHistory()
-            .collect { words ->
-                _uiState.value = _uiState.value.copy(searchHistoryList = words)
-            }
     }
 
     fun onSearchTextChange(value: String) {
@@ -65,7 +61,6 @@ class SeachWordViewModel(
     fun onClearHistory() {
         viewModelScope.launch {
             clearSearchHistoryUseCase.clearSearchHistory()
-            loadHistory()
         }
     }
 
