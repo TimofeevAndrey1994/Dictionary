@@ -76,6 +76,10 @@ class SeachWordViewModel(
         isMustShowHistory()
     }
 
+    fun repeatLastQuery(){
+        searchWithDebaunce(force = true)
+    }
+
     private fun isMustShowHistory() {
         val value = _uiState.value
         if (value.searchText.trim().isEmpty() && isEditTextFocused && value.searchHistoryList.isNotEmpty()) {

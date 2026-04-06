@@ -15,7 +15,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -25,9 +28,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.timofeev.words.domain.model.WordDetails
 import com.timofeev.words.presentation.search.SeachWordViewModel
 import com.timofeev.words.presentation.search.SeachWordViewModelFactory
 import com.timofeev.words.presentation.search.SearchResultState
@@ -52,7 +59,8 @@ fun SearchScreenRoute(modifier: Modifier = Modifier) {
         onEditTextChanged = seachWordViewModel::onEditTextFocusChanged,
         searchHistoryWords = uiState.value.searchHistoryList,
         onHistoryItemClick = seachWordViewModel::onHistoryItemClick,
-        onHistoryClear = seachWordViewModel::onClearHistory
+        onHistoryClear = seachWordViewModel::onClearHistory,
+        onRepeatQuery = seachWordViewModel::repeatLastQuery
     )
 }
 
@@ -67,7 +75,8 @@ fun SearchScreen(
     onEditTextChanged: (Boolean) -> Unit,
     searchHistoryWords: List<String>,
     onHistoryItemClick: (String) -> Unit,
-    onHistoryClear: () -> Unit
+    onHistoryClear: () -> Unit,
+    onRepeatQuery: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -102,17 +111,17 @@ fun SearchScreen(
 
        when(searchUiState){
            is SearchResultState.Empty -> {
-               Empty()
+               Empty(searchUiState.emptyMessage)
            }
            is SearchResultState.Error -> {
-               Error()
+               Error(searchUiState.errorMessage, onRepeatQuery = onRepeatQuery)
            }
            SearchResultState.Init -> {}
            SearchResultState.Loading -> {
                Loading()
            }
            is SearchResultState.Success -> {
-               WordDetails()
+               WordDetails(searchUiState.data)
            }
        }
     }
@@ -132,7 +141,9 @@ fun SearchHistory(
             Text(
                 "Очистить",
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.align(Alignment.CenterEnd).clickable(onClick = { onHistoryClear() }),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .clickable(onClick = { onHistoryClear() }),
             )
         }
         Spacer(Modifier.height(8.dp))
@@ -145,6 +156,9 @@ fun SearchHistory(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onHistoryItemClick(it) },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 ) {
                     Box(
                         modifier = Modifier
@@ -160,21 +174,61 @@ fun SearchHistory(
 }
 
 @Composable
-fun Empty(){
-  Text("Empty")
+fun Empty(emptyMessage: String) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Text(emptyMessage, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    }
 }
 
 @Composable
-fun Error(){
-    Text("Error")
+fun Error(errorMessage: String, onRepeatQuery: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(errorMessage, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = onRepeatQuery) {
+                Text("Повторить")
+            }
+        }
+    }
 }
 
 @Composable
 fun Loading(){
-    Text("Loading")
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator()
+            Spacer(Modifier.height(8.dp))
+            Text("Идет загрузка...терпение...")
+        }
+
+    }
 }
 
 @Composable
-fun WordDetails(){
-    Text("WordDetails")
+fun WordDetails(data: List<WordDetails>) {
+    Spacer(Modifier.height(16.dp))
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(data) { item ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = {}),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                ) {
+                    Text(item.word ?: "")
+                }
+            }
+        }
+    }
 }
