@@ -1,16 +1,21 @@
 package com.timofeev.words.ui.search_word
 
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -28,12 +33,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.timofeev.words.R
 import com.timofeev.words.domain.model.WordDetails
 import com.timofeev.words.presentation.search.SeachWordViewModel
 import com.timofeev.words.presentation.search.SeachWordViewModelFactory
@@ -60,7 +67,8 @@ fun SearchScreenRoute(modifier: Modifier = Modifier) {
         searchHistoryWords = uiState.value.searchHistoryList,
         onHistoryItemClick = seachWordViewModel::onHistoryItemClick,
         onHistoryClear = seachWordViewModel::onClearHistory,
-        onRepeatQuery = seachWordViewModel::repeatLastQuery
+        onRepeatQuery = seachWordViewModel::repeatLastQuery,
+        onWordItemClick = {}
     )
 }
 
@@ -76,7 +84,8 @@ fun SearchScreen(
     searchHistoryWords: List<String>,
     onHistoryItemClick: (String) -> Unit,
     onHistoryClear: () -> Unit,
-    onRepeatQuery: () -> Unit
+    onRepeatQuery: () -> Unit,
+    onWordItemClick: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -89,6 +98,7 @@ fun SearchScreen(
                 .onFocusChanged { focusState -> onEditTextChanged(focusState.isFocused) },
             shape = RoundedCornerShape(12.dp),
             maxLines = 1,
+            textStyle = TextStyle(fontSize = 18.sp),
             placeholder = { Text("") },
             leadingIcon = {
                 Icon(
@@ -121,7 +131,7 @@ fun SearchScreen(
                Loading()
            }
            is SearchResultState.Success -> {
-               WordDetails(searchUiState.data)
+               WordDetails(searchUiState.data, onWordItemClick)
            }
        }
     }
@@ -206,7 +216,7 @@ fun Loading(){
 }
 
 @Composable
-fun WordDetails(data: List<WordDetails>) {
+fun WordDetails(data: List<WordDetails>, onWordItemClick: () -> Unit) {
     Spacer(Modifier.height(16.dp))
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -216,19 +226,54 @@ fun WordDetails(data: List<WordDetails>) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = {}),
+                    .clickable(onClick = onWordItemClick),
+                shape = RoundedCornerShape(corner = CornerSize(16.dp)),
+                elevation = CardDefaults.cardElevation(8.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
-                )
+                ),
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.onSurfaceVariant)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp)
-                ) {
-                    Text(item.word ?: "")
-                }
+                WordItem(item)
             }
+        }
+    }
+}
+
+@Composable
+fun WordItem(word: WordDetails) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(word.word ?: "", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+        Spacer(Modifier.height(8.dp))
+        val phoneticsWithText = word.phonetics?.filter { !it.text.isNullOrEmpty() }
+        val phoneticsWithTextAndAudio = phoneticsWithText?.filter { !it.audio.isNullOrEmpty() }
+
+        val phonetic = phoneticsWithTextAndAudio?.firstOrNull() ?: phoneticsWithText?.firstOrNull()
+        Row() {
+            Text(phonetic?.text ?: "Unknown", fontFamily = FontFamily.SansSerif, fontSize = 16.sp)
+            Spacer(Modifier.width(4.dp))
+            val elseValue = word.phonetics?.count()?.minus(1) ?: 0
+            if (elseValue > 0) Text("(+${elseValue})", fontSize = 16.sp)
+            if (!phonetic?.audio.isNullOrEmpty()) {
+                Spacer(Modifier.weight(1f))
+                Icon(
+                    painter = painterResource(R.drawable.audio),
+                    contentDescription = "Audio",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        val filteredMeanings = word.meanings?.filter { !it.partOfSpeech.isNullOrEmpty() }
+        val meaning = filteredMeanings?.firstOrNull()
+        Row() {
+            Text(meaning?.partOfSpeech ?: "", fontSize = 16.sp)
+            val elseValue = word.meanings?.count()?.minus(1) ?: 0
+            if (elseValue > 0) Text("(+${elseValue})", fontSize = 16.sp)
         }
     }
 }
