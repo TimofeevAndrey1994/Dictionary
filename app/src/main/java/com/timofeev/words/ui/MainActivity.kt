@@ -6,10 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -18,7 +15,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.timofeev.words.R
-import com.timofeev.words.ui.search_word.SearchScreenRoute
+import com.timofeev.words.ui.navigation.AppNavigation
 import com.timofeev.words.ui.theme.WordsTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +34,7 @@ class MainActivity : ComponentActivity() {
                         )
                     )
                 }) { innerPadding ->
-                    SearchScreenRoute(modifier = Modifier.padding(innerPadding))
+                    AppNavigation(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
