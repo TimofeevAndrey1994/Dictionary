@@ -14,7 +14,11 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
     NavDisplay(
         backStack = backStack,
-        onBack = { backStack.removeLastOrNull() },
+        onBack = {
+            if (backStack.size > 1) {
+                backStack.removeLastOrNull()
+            }
+        },
         entryProvider = entryProvider {
             entry<WordList> {
                 SearchScreenRoute(
@@ -25,7 +29,11 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 WordDetailsRoute(
                     route.word,
                     modifier,
-                    onBackClick = { backStack.removeLastOrNull() })
+                    onBackClick = {
+                        if (backStack.size > 1) {
+                            backStack.removeLastOrNull()
+                        }
+                    })
             }
         })
 
