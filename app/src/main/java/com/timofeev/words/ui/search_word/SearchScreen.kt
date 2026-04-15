@@ -47,7 +47,7 @@ import com.timofeev.words.presentation.search.SeachWordViewModelFactory
 import com.timofeev.words.presentation.search.SearchResultState
 
 @Composable
-fun SearchScreenRoute(modifier: Modifier = Modifier) {
+fun SearchScreenRoute(modifier: Modifier = Modifier, onGoToDetails: (String) -> Unit) {
     val context = LocalContext.current.applicationContext
     val seachWordViewModel: SeachWordViewModel = viewModel(
         factory = SeachWordViewModelFactory(
@@ -68,7 +68,7 @@ fun SearchScreenRoute(modifier: Modifier = Modifier) {
         onHistoryItemClick = seachWordViewModel::onHistoryItemClick,
         onHistoryClear = seachWordViewModel::onClearHistory,
         onRepeatQuery = seachWordViewModel::repeatLastQuery,
-        onWordItemClick = {}
+        onWordItemClick = onGoToDetails
     )
 }
 
@@ -85,7 +85,7 @@ fun SearchScreen(
     onHistoryItemClick: (String) -> Unit,
     onHistoryClear: () -> Unit,
     onRepeatQuery: () -> Unit,
-    onWordItemClick: () -> Unit
+    onWordItemClick: (String) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -216,7 +216,7 @@ fun Loading(){
 }
 
 @Composable
-fun WordDetails(data: List<WordDetails>, onWordItemClick: () -> Unit) {
+fun WordDetails(data: List<WordDetails>, onWordItemClick: (String) -> Unit) {
     Spacer(Modifier.height(16.dp))
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -226,7 +226,7 @@ fun WordDetails(data: List<WordDetails>, onWordItemClick: () -> Unit) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onWordItemClick),
+                    .clickable(onClick = {onWordItemClick(item.word ?: "")}),
                 shape = RoundedCornerShape(corner = CornerSize(16.dp)),
                 elevation = CardDefaults.cardElevation(8.dp),
                 colors = CardDefaults.cardColors(
